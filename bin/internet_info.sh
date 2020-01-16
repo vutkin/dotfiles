@@ -27,8 +27,6 @@ else
     PUBLIC_IP=$(curl -4 ifconfig.co)
 fi
  
-INTERNET=''
-
 #internet_info=`iwconfig eth0 | grep "Signal level" | awk '{print $2}' | sed 's/-//g'`
 
 # if [[ $internet_info -lt 20 ]]; then
@@ -43,4 +41,4 @@ INTERNET=''
 #     echo -n '#[fg=colour150]'
 # fi
 
-echo -n "#[fg=colour150]$INTERNET #[fg=colour197]$IP | $PUBLIC_IP"
+echo -n "#[fg=colour197]$IP | $PUBLIC_IP"

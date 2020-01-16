@@ -1,2 +1,4 @@
 export GOPATH=$PROJECTS/go
-export PATH="$GOPATH/bin:$PATH"
+if [ -d "$GOPATH" ]; then export PATH="$GOPATH/bin:$PATH"
+elif [[ $commands[go] ]]; then export PATH="$(go env GOPATH)/bin:$PATH"
+fi

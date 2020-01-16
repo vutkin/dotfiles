@@ -1,24 +1,29 @@
 #!/bin/bash
+set +e
 
 # Update pkg lists
 echo "Updating package lists..."
-sudo apt-get update
+sudo apt update && \
+
+sudo apt install -y apt-transport-https \
+    python3 python3-pip python3-dev python3-setuptools
 
 # zsh install
 which zsh > /dev/null 2>&1
 if [[ $? -eq 0 ]] ; then
-echo ''
-echo "zsh already installed..."
+  echo ''
+  echo "zsh already installed..."
 else
-echo "zsh not found, now installing zsh..."
-echo ''
-sudo apt install zsh -y
+  echo "zsh not found, now installing zsh..."
+  echo ''
+  sudo apt install powerline fonts-powerline -y
+  sudo apt install zsh -y
 fi
 
 # Installing git completion
 echo ''
 echo "Now installing git and bash-completion..."
-sudo apt-get install git bash-completion -y
+sudo apt install git bash-completion -y
 
 echo ''
 echo "Now configuring git-completion..."
@@ -36,19 +41,19 @@ echo ''
 echo "oh-my-zsh is already installed..."
 read -p "Would you like to update oh-my-zsh now?" -n 1 -r
 echo ''
-    if [[ $REPLY =~ ^[Yy]$ ]] ; then
-    cd ~/.oh-my-zsh && git pull
-        if [[ $? -eq 0 ]]
-        then
-            echo "Update complete..." && cd
-        else
-            echo "Update not complete..." >&2 cd
-        fi
+if [[ $REPLY =~ ^[Yy]$ ]] ; then
+cd ~/.oh-my-zsh && git pull
+    if [[ $? -eq 0 ]]
+    then
+        echo "Update complete..." && cd
+    else
+        echo "Update not complete..." >&2 cd
     fi
+fi
 else
-echo "oh-my-zsh not found, now installing oh-my-zsh..."
-echo ''
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+  echo "oh-my-zsh not found, now installing oh-my-zsh..."
+  echo ''
+  sh -c "CHSH=no RUNZSH=no $(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 fi
 
 # oh-my-zsh plugin install
@@ -67,18 +72,6 @@ git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-m
 
 # syntax highlight
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-
-# powerlevel9k install
-echo ''
-echo "Now installing powerlevel9k..."
-echo ''
-git clone https://github.com/bhilburn/powerlevel9k.git ~/.oh-my-zsh/custom/themes/powerlevel9k
-
-# powerlevel 10k install
-echo ''
-echo "Now installing powerlevel10k..."
-echo ''
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k
 
 # vimrc vundle install
 echo ''
@@ -106,19 +99,14 @@ echo ''
 git clone https://github.com/sheerun/vim-wombat-scheme.git ~/.vim/colors/wombat 
 mv ~/.vim/colors/wombat/colors/* ~/.vim/colors/
 
-# Midnight commander install
-echo ''
-echo "Now installing Midnight commander..."
-echo ''
-sudo apt-get install mc -y
-
 # Speedtest-cli, pip and jq install
 echo ''
 echo "Now installing Speedtest-cli, pip, tmux and jq..."
 echo ''
-sudo apt-get install jq tmux python-pip -y
-sudo pip install --upgrade pip
-sudo pip install speedtest-cli
+sudo apt install -y \
+      jq tmux screen tree xclip autojump
+sudo -H pip3 install --upgrade pip
+sudo -H pip install speedtest-cli thefuck virtualenvwrapper
 
 # Bash color scheme
 echo ''
@@ -127,84 +115,54 @@ echo ''
 wget https://raw.githubusercontent.com/seebi/dircolors-solarized/master/dircolors.256dark
 mv dircolors.256dark .dircolors
 
-# Pull down personal dotfiles
+echo "Now pulling down vutkin dotfiles..."
+git clone https://github.com/vutkin/dotfiles.git ~/.dotfiles
 echo ''
-read -p "Do you want to use jldeen's dotfiles? y/n" -n 1 -r
-echo    # (optional) move to a new line
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
-    echo ''
-	echo "Now pulling down jldeen dotfiles..."
-	git clone https://github.com/jldeen/dotfiles.git ~/.dotfiles
-	echo ''
-	cd $HOME/.dotfiles && echo "switched to .dotfiles dir..."
-	echo ''
-	echo "Checking out wsl branch..." && git checkout wsl
-	echo ''
-	echo "Now configuring symlinks..." && $HOME/.dotfiles/script/bootstrap
-    if [[ $? -eq 0 ]]
-    then
-        echo "Successfully configured your environment with jldeen's dotfiles..."
-    else
-        echo "jldeen's dotfiles were not applied successfully..." >&2
-fi
-else 
-	echo ''
-    echo "You chose not to apply jldeen's dotfiles. You will need to configure your environment manually..."
-	echo ''
-	echo "Setting defaults for .zshrc and .bashrc..."
-	echo ''
-	echo "source $HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" >> ${ZDOTDIR:-$HOME}/.zshrc && echo "added zsh-syntax-highlighting to .zshrc..."
-	echo ''
-	echo "source $HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh" >> ${ZDOTDIR:-$HOME}/.zshrc && echo "added zsh-autosuggestions to .zshrc..."
-	echo ''
-	echo "source $HOME/.git-completion.bash" >> ${ZDOTDIR:-$HOME}/.bashrc && echo "added git-completion to .bashrc..."
-	
+cd $HOME/.dotfiles && echo "switched to .dotfiles dir..."
+echo ''
+echo "Checking out vagrant-ubuntu branch..." && git checkout vagrant-ubuntu
+echo ''
+echo "Now configuring symlinks..." && $HOME/.dotfiles/script/bootstrap
+
+if [[ $? -eq 0 ]] ; then
+  echo "Successfully configured your environment with vutkin's dotfiles..."
+else
+  echo "vutkin's dotfiles were not applied successfully..." >&2
 fi
 
-# Setup and configure az cli
-echo ''
-read -p "Do you want to install Azure CLI? y/n (This will take some time...)" -n 1 -r
-echo ''
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
-	echo "Now installing az cli..."
-    AZ_REPO=$(lsb_release -cs)
-    echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | \
-     sudo tee /etc/apt/sources.list.d/azure-cli.list
+echo "Now installing az cli..."
+AZ_REPO=$(lsb_release -cs)
+echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | \
+  sudo tee /etc/apt/sources.list.d/azure-cli.list
 
-    sudo apt-key adv --keyserver packages.microsoft.com --recv-keys 52E16F86FEE04B979B07E28DB02C46DF417A0893
-    sudo curl -L https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-    sudo apt-get install apt-transport-https
-    sudo apt-get update && sudo apt-get install azure-cli
-	
-    if [[ $? -eq 0 ]]
-    then
-        echo "Successfully installed Azure CLI 2.0."
-    else
-        echo "Azure CLI not installed successfully." >&2
-    fi
-    else 
-    echo "You chose not to install Azure CLI. Exiting now."
-    fi
+sudo apt-key adv --keyserver packages.microsoft.com --recv-keys 52E16F86FEE04B979B07E28DB02C46DF417A0893
+sudo curl -L https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+sudo apt update && sudo apt install azure-cli
+
+if [[ $? -eq 0 ]] ; then
+  echo "Successfully installed Azure CLI 2.0."
+else
+  echo "Azure CLI not installed successfully." >&2
+fi
+
+sudo snap install kubectl --classic
+sudo snap install helm --classic
+if [[ $? -eq 0 ]] ; then
+  echo "Successfully installed kubectl."
+  kubectl krew install ctx ns
+else
+  echo "Kubectl not installed successfully." >&2
+fi
 
 # Set default shell to zsh
-echo ''
-read -p "Do you want to change your default shell? y/n" -n 1 -r
-echo ''
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
-	echo "Now setting default shell..."
-    chsh -s $(which zsh)
-    if [[ $? -eq 0 ]]
-    then
-        echo "Successfully set your default shell to zsh..."
-    else
-        echo "Default shell not set successfully..." >&2
-fi
-else 
-    echo "You chose not to set your default shell to zsh. Exiting now..."
+echo "Now setting default shell..."
+sudo chsh -s $(which zsh) $(whoami)
+if [[ $? -eq 0 ]] ; then
+  echo "Successfully set your default shell to zsh..."
+else
+  echo "Default shell not set successfully..." >&2
 fi
 
 echo ''
-echo '	Badass WSL terminal installed! Please reboot your computer for changes to be made.'
+echo 'Please reboot your computer for changes to be made.'
+set -e

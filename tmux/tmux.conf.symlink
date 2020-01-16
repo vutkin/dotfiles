@@ -3,9 +3,11 @@ set -g prefix C-a
 unbind C-b
 bind C-a send-prefix
 
-
 # force a reload of the config file
-bind-key R source-file ~/.tmux.conf \; display-message "tmux.conf reloaded."
+bind r source-file ~/.tmux.conf \; display-message "tmux.conf reloaded."
+
+# Edit configuration and reload
+bind e new-window -n 'tmux.conf' "sh -c '\${EDITOR:-vim} ~/.tmux.conf && tmux source ~/.tmux.conf && tmux display \"tmux.conf reloaded.\"'"
 
 # TODO: This shadows the default paste-buffer binding; should fix that.
 bind-key ] send-prefix
@@ -20,16 +22,8 @@ set-option -g history-limit 20000
 setw -g mode-keys vi
 bind P paste-buffer
 
-### --- tmux 2.1 or azure cloud shell
-# bind-key -t vi-copy 'v' begin-selection
-# bind-key -t vi-copy 'y' copy-selection
-# bind-key -t vi-copy 'r' rectangle-toggle
-### --- end tmux 2.1 or azure cloud shell
-
 bind-key -T copy-mode-vi 'v' send-keys -X begin-selection
 bind-key -T copy-mode-vi 'y' send-keys -X copy-selection
-
-
 
 # xterm-style function key sequences
 setw -g xterm-keys on
@@ -55,9 +49,8 @@ set -s escape-time 1
 #bind -T copy-mode-vi MouseDrag1Pane send -X copy-pipe "cat > /dev/clipboard" \; send -X clear-selection
 
 
-
 # Easy-to-remember split pane commands
-bind \\ split-window -h -c '#{pane_current_path}' # vertical pane
+bind \ split-window -h -c '#{pane_current_path}' # vertical pane
 bind - split-window -v -c '#{pane_current_path}' # horizontal pane
 unbind '"'
 unbind %
@@ -87,7 +80,7 @@ set -g status-position bottom
 set -g status-bg colour237
 set -g status-fg colour137
 set -g status-left ' #[fg=colour197]#(~/bin/internet_info.sh) '
-set -g status-right '#{prefix_highlight} #(eval ~/.tmux/responsive `tmux display -p "#{client_width}"`)#[fg=colour165]#[bg=default] #H'
+set -g status-right '#{prefix_highlight}CPU: #{cpu_icon} #{cpu_percentage} Online: #{online_status} #(eval ~/.tmux/responsive `tmux display -p "#{client_width}"`)#[fg=colour165]#[bg=default] #H'
 set -g status-right-length 100
 set -g status-left-length 80
 
@@ -114,16 +107,16 @@ set -g @tpm_plugins '          \
    christoomey/vim-tmux-navigator       \
    tmux-plugins/tmux-prefix-highlight \
    tmux-plugins/tmux-resurrect \
+   tmux-plugins/tmux-cpu \
    tmux-plugins/tmux-sessionist \
-   tmux-plugins/tmux-sessionist \
-   xamut/tmux-spotify           \
    tmux-plugins/tmux-online-status \
    tmux-plugins/tmux-resurrect  \
-   tmux-plugins/tmux-yank \
-
+   tmux-plugins/tmux-yank       \
 '
 
 set -g @tpm-clean 'u'
+set -g @online_icon "ok"
+set -g @offline_icon "offline!"
 
 # Other examples:
 # set -g @plugin 'github_username/plugin_name'

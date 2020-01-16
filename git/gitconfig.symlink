@@ -6,28 +6,56 @@
 [alias]
         co = checkout
         promote = !$ZSH/bin/git-promote
+        di = diff --color
+        glog = log --graph --color --pretty=format:'%C(yellow)%h%C(reset) %s %C(bold blue)[%an] %C(auto)%d %C(reset) %C(magenta)<%cr>%C(reset)'
+        caa = commit -a --amend -C HEAD
         wtf     = !$ZSH/bin/git-wtf
         rank-contributors = !$ZSH/bin/git-rank-contributors
         count   = !git shortlog -sn
+        branch-delete = !bash -c \" \
+              git branch -D $1 && \
+              git push origin :$1 \
+        \"
+        tag-delete = !sh -c \" \
+              git tag -d $1 && \
+              git push origin :refs/tags/$1 \
+        \"
 [color]
-        diff = auto
-        status = auto
-        branch = auto
         ui = true
+[color "diff"]
+        meta = yellow bold
+        frag = magenta bold
+        old = red bold
+        new = green bold
+[color "status"]
+        added = green
+        changed = red bold
+        untracked = magenta bold
+[color "branch"]
+  remote = yellow
 [core]
         excludesfile = ~/.gitignore
         editor = vim
 [apply]
         whitespace = nowarn
+[tag]
+        # Sort tags as version numbers whenever applicable, so 1.10.2 is AFTER 1.2.0.
+        sort = version:refname
 [mergetool]
         keepBackup = false
 [difftool]
         prompt = false
+[log]
+        # Use abbrev SHAs whenever possible/relevant instead of full 40 chars
+        abbrevCommit = true
 [help]
         autocorrect = 1
+[pull]
+        rebase = true
 [push]
         # See `git help config` (search for push.default)
         # for more information on different options of the below setting.
         #
         # Setting to git 2.0 default to suppress warning message
         default = simple
+        followTags = true
